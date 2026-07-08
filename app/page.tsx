@@ -31,6 +31,7 @@ export default function Home() {
   const petRef = useRef<HTMLDivElement>(null);
   const [currentPet, setCurrentPet] = useState<string>("");
   const [cacheBuster, setCacheBuster] = useState<string>("");
+  const activeTimeline = useRef<gsap.core.Timeline | null>(null);
 
   useEffect(() => {
     // 마운트 시 첫 번째 펫 이미지를 임의로 선택하고 캐시 버스터용 타임스탬프 설정
@@ -39,8 +40,13 @@ export default function Home() {
     setCacheBuster(String(Date.now()));
   }, []);
 
-  useEffect(() => {
-    if (!currentPet || !petRef.current) return;
+  const handleImageLoad = () => {
+    if (!petRef.current) return;
+
+    // 만약 이전 애니메이션이 아직 실행 중이라면 강제로 중단 및 메모리 정리
+    if (activeTimeline.current) {
+      activeTimeline.current.kill();
+    }
 
     const element = petRef.current;
     
@@ -58,15 +64,17 @@ export default function Home() {
           nextPet = PET_IMAGES[randomIndex];
         }
         
-        // 0.2초간 숨겨진 상태로 대기 후 다음 펫 로드 및 렌더링 트리거
+        // 0.2초간 숨겨진 상태로 대기 후 다음 펫 이미지 설정
+        // 이미지 src가 교체되면 브라우저 다운로드 후 자동으로 onLoad가 다시 발생하여 루프가 순환함
         gsap.delayedCall(0.2, () => {
           setCurrentPet(nextPet);
         });
       }
     });
 
-    // 1. 위로 튀어오르기 (easeOutExpo -> "expo.out")
-    // 2. 아래로 낙하하기 (easeInExpo -> "expo.in")
+    activeTimeline.current = tl;
+
+    // 이미지가 100% 로드되어 렌더링될 준비가 끝난 상태에서 애니메이션 작동
     tl.fromTo(element,
       { 
         y: 400, 
@@ -97,11 +105,15 @@ export default function Home() {
       },
       "+=0.05" // 정점에서 아주 짧게 머무른 후 낙하
     );
+  };
 
+  useEffect(() => {
     return () => {
-      tl.kill();
+      if (activeTimeline.current) {
+        activeTimeline.current.kill();
+      }
     };
-  }, [currentPet]);
+  }, []);
 
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-white flex flex-col justify-end items-center">
@@ -110,13 +122,14 @@ export default function Home() {
         <div 
           ref={petRef} 
           className="absolute bottom-0 z-10 origin-bottom select-none pointer-events-none"
-          style={{ willChange: "transform, opacity" }}
+          style={{ willChange: "transform, opacity", transform: "translateY(400px)", opacity: 0 }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
             src={`/jump/${currentPet}?v=${cacheBuster}`} 
             alt="Jumping Pet" 
             className="w-[200px] h-auto object-contain"
+            onLoad={handleImageLoad}
           />
         </div>
       )}
