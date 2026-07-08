@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Pet Jump Animation",
+  title: "Pet Jump",
   description: "A simple web animation of pets jumping from behind a Rimowa carrier.",
 };
 

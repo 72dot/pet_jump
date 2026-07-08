@@ -61,7 +61,6 @@ export default function Home() {
         // 0.2초간 숨겨진 상태로 대기 후 다음 펫 로드 및 렌더링 트리거
         gsap.delayedCall(0.2, () => {
           setCurrentPet(nextPet);
-          setCacheBuster(Date.now()); // 이미지 교체 시점마다 캐시 버스팅 값 갱신
         });
       }
     });
