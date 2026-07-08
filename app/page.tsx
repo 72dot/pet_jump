@@ -30,11 +30,13 @@ const PET_IMAGES = [
 export default function Home() {
   const petRef = useRef<HTMLDivElement>(null);
   const [currentPet, setCurrentPet] = useState<string>("");
+  const [cacheBuster, setCacheBuster] = useState<string>("");
 
   useEffect(() => {
-    // 마운트 시 첫 번째 펫 이미지를 임의로 선택
+    // 마운트 시 첫 번째 펫 이미지를 임의로 선택하고 캐시 버스터용 타임스탬프 설정
     const initialPet = PET_IMAGES[Math.floor(Math.random() * PET_IMAGES.length)];
     setCurrentPet(initialPet);
+    setCacheBuster(String(Date.now()));
   }, []);
 
   useEffect(() => {
@@ -104,7 +106,7 @@ export default function Home() {
   return (
     <div className="relative w-screen h-screen overflow-hidden bg-white flex flex-col justify-end items-center">
       {/* 튀어오르는 동물 이미지 레이어 (z-index 10) */}
-      {currentPet && (
+      {currentPet && cacheBuster && (
         <div 
           ref={petRef} 
           className="absolute bottom-0 z-10 origin-bottom select-none pointer-events-none"
@@ -112,7 +114,7 @@ export default function Home() {
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img 
-            src={`/jump/${currentPet}`} 
+            src={`/jump/${currentPet}?v=${cacheBuster}`} 
             alt="Jumping Pet" 
             className="w-[200px] h-auto object-contain"
           />
@@ -123,7 +125,7 @@ export default function Home() {
       <div className="absolute bottom-0 z-20 select-none pointer-events-none">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img 
-          src="/rimowa.webp" 
+          src={cacheBuster ? `/rimowa.webp?v=${cacheBuster}` : "/rimowa.webp"} 
           alt="Rimowa Carrier" 
           className="w-[280px] sm:w-[320px] h-auto object-contain block translate-y-2"
         />
